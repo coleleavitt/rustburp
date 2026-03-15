@@ -593,15 +593,15 @@ fn cmd_auto(scale: Option<f64>) -> Result<()> {
         ]);
     }
 
+    setup_wayland_compat(&mut cmd, java_version, scale_factor);
+    cmd.env("JCEF_DISABLE_SANDBOX", "true");
+
     // Always use agent if it exists
     if agent_path.exists() {
         cmd.arg(format!("-javaagent:{}", agent_path.display()));
     }
 
     cmd.arg("-jar").arg(&jar_path);
-
-    setup_wayland_compat(&mut cmd, java_version, scale_factor);
-    cmd.env("JCEF_DISABLE_SANDBOX", "true");
 
     // Run Burp Suite
     let status = cmd.status().context("Failed to start Burp Suite")?;
