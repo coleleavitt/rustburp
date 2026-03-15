@@ -1,0 +1,57 @@
+[package]
+name = "rusburp"
+version = "0.1.0"
+edition = "2024"
+description = "Burp Suite Pro license manager and agent installer"
+authors = ["Zer0DayLab"]
+
+[dependencies]
+# CLI framework
+clap = { version = "4", features = ["derive", "color", "env"] }
+
+# Colored terminal output
+colored = "2"
+owo-colors = "4"
+
+# Logging/tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# ASCII art banner
+figlet-rs = "0.1"
+
+# Async runtime (for potential HTTP operations)
+tokio = { version = "1", features = ["full"] }
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Path/directory handling
+dirs = "6"
+walkdir = "2"
+
+# Serialization (for config files)
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# Crypto (for keygen functionality)
+rsa = { version = "0.9", features = ["sha2", "sha1"] }
+sha2 = "0.10"
+sha1 = "0.10"
+rand = "0.8"
+base64 = "0.22"
+des = "0.8"
+ecb = "0.1"
+cipher = { version = "0.4", features = ["block-padding"] }
+hex = "0.4"
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "blocking"] }
+
+# Semver parsing
+semver = "1"
+
+# Regex
+regex = "1"
