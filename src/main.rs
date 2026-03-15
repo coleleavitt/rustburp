@@ -593,11 +593,6 @@ fn cmd_auto(scale: Option<f64>) -> Result<()> {
         ]);
     }
 
-    // Java 9+ HiDPI scaling
-    if java_version >= 9 && scale_factor > 1.0 {
-        cmd.arg(format!("-Dsun.java2d.uiScale={}", scale_factor));
-    }
-
     // Always use agent if it exists
     if agent_path.exists() {
         cmd.arg(format!("-javaagent:{}", agent_path.display()));
@@ -605,7 +600,7 @@ fn cmd_auto(scale: Option<f64>) -> Result<()> {
 
     cmd.arg("-jar").arg(&jar_path);
 
-    setup_wayland_compat(&mut cmd);
+    setup_wayland_compat(&mut cmd, java_version, scale_factor);
     cmd.env("JCEF_DISABLE_SANDBOX", "true");
 
     // Run Burp Suite
@@ -719,15 +714,37 @@ fn cmd_config() -> Result<()> {
     Ok(())
 }
 
-fn setup_wayland_compat(cmd: &mut std::process::Command) {
+fn setup_wayland_compat(cmd: &mut std::process::Command, java_version: u32, scale_factor: f64) {
     let is_wayland = std::env::var("XDG_SESSION_TYPE")
         .map(|v| v == "wayland")
         .unwrap_or(false);
 
     if is_wayland {
-        cmd.env("GDK_BACKEND", "x11");
+        if java_version >= 21 {
+            cmd.arg("-Dawt.toolkit.name=WLToolkit");
+        } else {
+            cmd.env("GDK_BACKEND", "x11");
+        }
         cmd.env("_JAVA_AWT_WM_NONREPARENTING", "1");
-        cmd.env("AWT_TOOLKIT", "MToolkit");
+    }
+
+    cmd.args([
+        "-Dsun.java2d.uiScale.enabled=true",
+        "-Dswing.aatext=true",
+        "-Dawt.useSystemAAFontSettings=on",
+        "-Dflatlaf.useTextYCorrection=true",
+        "-Dflatlaf.updateUIOnSystemFontChange=true",
+    ]);
+
+    if is_wayland {
+        cmd.arg("-Dflatlaf.useWindowDecorations=false");
+        cmd.arg("-Dsun.java2d.vulkan=false");
+    } else {
+        cmd.arg("-Dsun.java2d.xrender=true");
+    }
+
+    if scale_factor > 1.0 {
+        cmd.arg(format!("-Dflatlaf.uiScale={}", scale_factor));
     }
 }
 
