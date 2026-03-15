@@ -605,8 +605,7 @@ fn cmd_auto(scale: Option<f64>) -> Result<()> {
 
     cmd.arg("-jar").arg(&jar_path);
 
-    // Disable Chromium sandbox if not running as root (common Linux issue)
-    // The chrome-sandbox binary needs setuid root permissions to work properly
+    setup_wayland_compat(&mut cmd);
     cmd.env("JCEF_DISABLE_SANDBOX", "true");
 
     // Run Burp Suite
@@ -720,9 +719,19 @@ fn cmd_config() -> Result<()> {
     Ok(())
 }
 
-/// Find Java executable
+fn setup_wayland_compat(cmd: &mut std::process::Command) {
+    let is_wayland = std::env::var("XDG_SESSION_TYPE")
+        .map(|v| v == "wayland")
+        .unwrap_or(false);
+
+    if is_wayland {
+        cmd.env("GDK_BACKEND", "x11");
+        cmd.env("_JAVA_AWT_WM_NONREPARENTING", "1");
+        cmd.env("AWT_TOOLKIT", "MToolkit");
+    }
+}
+
 fn find_java() -> Result<String> {
-    // Check JAVA_HOME first
     if let Ok(java_home) = std::env::var("JAVA_HOME") {
         let java = std::path::Path::new(&java_home).join("bin/java");
         if java.exists() {
