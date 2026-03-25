@@ -39,12 +39,82 @@ sudo mv rusburp /usr/local/bin/
 
 #### Option 2: Build from Source
 
+If you want to build it yourself, follow these steps:
+
+##### Step 1: Install Git (if you don't have it)
+
+**Windows:**
+1. Download Git from [git-scm.com](https://git-scm.com/download/win)
+2. Run the installer, click Next through all the defaults
+3. Restart your terminal/PowerShell after installation
+
+**Linux:**
 ```bash
-# Requires Rust toolchain (https://rustup.rs)
-git clone https://github.com/Zer0DayLab/rusburp.git
-cd rusburp
+# Debian/Ubuntu
+sudo apt install git
+
+# Fedora
+sudo dnf install git
+
+# Arch
+sudo pacman -S git
+```
+
+##### Step 2: Install Rust Toolchain
+
+**Windows:**
+1. Download the Rust installer from [rustup.rs](https://rustup.rs)
+2. Run `rustup-init.exe`
+3. Press Enter to accept the default installation
+4. **Important:** Close and reopen your terminal/PowerShell after installation
+5. Verify it worked: `rustc --version` (should show something like `rustc 1.XX.X`)
+
+**Linux:**
+```bash
+# Run this command and follow the prompts (press Enter for defaults)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# After installation, reload your shell
+source ~/.cargo/env
+
+# Verify it worked
+rustc --version
+```
+
+##### Step 3: Clone and Build
+
+**Windows (PowerShell):**
+```powershell
+git clone https://github.com/coleleavitt/rustburp.git
+cd rustburp
 cargo build --release
-# Binary will be at target/release/rusburp
+```
+
+**Linux:**
+```bash
+git clone https://github.com/coleleavitt/rustburp.git
+cd rustburp
+cargo build --release
+```
+
+The first build may take a few minutes as it downloads and compiles dependencies.
+
+##### Step 4: Use the Binary
+
+After building, your binary is at:
+- **Windows:** `target\release\rusburp.exe`
+- **Linux:** `target/release/rusburp`
+
+**Windows - Add to PATH (optional):**
+```powershell
+# Copy to a folder in your PATH, or run from the build directory:
+.\target\release\rusburp.exe
+```
+
+**Linux - Install system-wide:**
+```bash
+sudo cp target/release/rusburp /usr/local/bin/
+rusburp --version
 ```
 
 ## Quick Start
