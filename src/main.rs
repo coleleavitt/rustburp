@@ -1,9 +1,11 @@
+use std::io::{self, Write};
+use std::path::PathBuf;
+
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-use std::io::{self, Write};
-
-use tracing_subscriber::{EnvFilter, fmt, prelude::*};
+use tracing_subscriber::prelude::*;
+use tracing_subscriber::{EnvFilter, fmt};
 
 mod banner;
 mod burp;
@@ -15,7 +17,7 @@ mod keygen;
 use banner::print_banner;
 use burp::BurpInstallation;
 use config::Config;
-use download::{BurpDownloader, format_bytes};
+use download::{BurpDownloader, VersionInfo, format_bytes};
 
 /// Burp Suite Pro license manager and agent installer
 #[derive(Parser)]
@@ -266,21 +268,7 @@ fn cmd_download(force: bool) -> Result<()> {
     println!();
     println!("{}", "Downloading Burp Suite Pro...".cyan());
 
-    let jar_path = downloader.download(&version_info, |progress| {
-        if progress.total_bytes > 0 {
-            print!(
-                "\r  {} [{:>3}%] {}/{} - {}",
-                "↓".blue(),
-                progress.percentage,
-                format_bytes(progress.bytes_downloaded).white(),
-                format_bytes(progress.total_bytes).dimmed(),
-                progress.speed.cyan()
-            );
-        } else {
-            print!("\r  {} {}", "→".blue(), progress.speed);
-        }
-        io::stdout().flush().ok();
-    })?;
+    let jar_path = download_burp_jar(&downloader, &version_info)?;
 
     println!();
     println!();
@@ -330,8 +318,23 @@ fn cmd_update() -> Result<()> {
         );
         println!();
 
-        // Auto-download
-        cmd_download(false)
+        println!("{}", "Downloading Burp Suite Pro update...".cyan());
+        let jar_path = download_burp_jar(&downloader, &latest)?;
+
+        println!();
+        println!();
+        println!(
+            "{} Burp Suite updated to {}",
+            "✓".green().bold(),
+            latest.version.green()
+        );
+        println!(
+            "  {} {}",
+            "Location:".dimmed(),
+            jar_path.display().to_string().white()
+        );
+
+        Ok(())
     } else {
         println!("{}", format!("Latest version: {}", latest.version).green());
         println!();
@@ -341,6 +344,24 @@ fn cmd_update() -> Result<()> {
         );
         Ok(())
     }
+}
+
+fn download_burp_jar(downloader: &BurpDownloader, version_info: &VersionInfo) -> Result<PathBuf> {
+    downloader.download(version_info, |progress| {
+        if progress.total_bytes > 0 {
+            print!(
+                "\r  {} [{:>3}%] {}/{} - {}",
+                "↓".blue(),
+                progress.percentage,
+                format_bytes(progress.bytes_downloaded).white(),
+                format_bytes(progress.total_bytes).dimmed(),
+                progress.speed.cyan()
+            );
+        } else {
+            print!("\r  {} {}", "→".blue(), progress.speed);
+        }
+        io::stdout().flush().ok();
+    })
 }
 
 fn cmd_install(force: bool) -> Result<()> {
@@ -497,23 +518,44 @@ fn cmd_auto(scale: Option<f64>) -> Result<()> {
 
     // Check if Burp Suite is installed
     let jar_path = match downloader.get_installed_version() {
-        Some((version, path)) => {
-            // Check for updates silently
-            if let Ok(latest) = downloader.fetch_latest_version() {
-                if latest.version != version {
-                    println!(
-                        "{} Update available: {} → {}",
-                        "!".yellow(),
-                        version.dimmed(),
-                        latest.version.green()
-                    );
-                    println!("  Run {} to upgrade", "rusburp update".cyan());
-                    println!();
+        Some((version, path)) => match downloader.fetch_latest_version() {
+            Ok(latest) if latest.version != version => {
+                println!(
+                    "{} Update available: {} → {}",
+                    "!".yellow(),
+                    version.dimmed(),
+                    latest.version.green()
+                );
+                println!("{}", "Downloading update before launch...".cyan());
+
+                match download_burp_jar(&downloader, &latest) {
+                    Ok(updated_path) => {
+                        println!();
+                        println!("{} Updated to {}", "✓".green(), latest.version.green());
+                        updated_path
+                    }
+                    Err(err) => {
+                        println!();
+                        println!("{} Update failed: {}", "!".yellow(), err);
+                        println!(
+                            "{} Continuing with Burp Suite {}",
+                            "→".blue(),
+                            version.yellow()
+                        );
+                        path
+                    }
                 }
             }
-            println!("{} Burp Suite {} ready", "✓".green(), version.yellow());
-            path
-        }
+            Ok(_) => {
+                println!("{} Burp Suite {} ready", "✓".green(), version.yellow());
+                path
+            }
+            Err(err) => {
+                println!("{} Could not check for updates: {}", "!".yellow(), err);
+                println!("{} Burp Suite {} ready", "✓".green(), version.yellow());
+                path
+            }
+        },
         None => {
             // Auto-download
             println!("{}", "Burp Suite not found. Downloading...".cyan());
@@ -526,21 +568,7 @@ fn cmd_auto(scale: Option<f64>) -> Result<()> {
                 version_info.version.green()
             );
 
-            let path = downloader.download(&version_info, |progress| {
-                if progress.total_bytes > 0 {
-                    print!(
-                        "\r  {} [{:>3}%] {}/{} - {}",
-                        "↓".blue(),
-                        progress.percentage,
-                        format_bytes(progress.bytes_downloaded).white(),
-                        format_bytes(progress.total_bytes).dimmed(),
-                        progress.speed.cyan()
-                    );
-                } else {
-                    print!("\r  {} {}", "→".blue(), progress.speed);
-                }
-                io::stdout().flush().ok();
-            })?;
+            let path = download_burp_jar(&downloader, &version_info)?;
 
             println!();
             println!(
@@ -568,7 +596,7 @@ fn cmd_auto(scale: Option<f64>) -> Result<()> {
     let java = find_java()?;
     let mut cmd = std::process::Command::new(&java);
 
-    // HiDPI scaling: use CLI override or auto-detect
+    // HiDPI scaling: use CLI override, or auto-detect from environment/display
     let scale_factor = scale.unwrap_or_else(get_display_scale);
     if scale_factor > 1.0 {
         println!(
@@ -593,6 +621,8 @@ fn cmd_auto(scale: Option<f64>) -> Result<()> {
         ]);
     }
 
+    // Clear _JAVA_OPTIONS so the shell environment can't inject uiScale
+    cmd.env_remove("_JAVA_OPTIONS");
     setup_wayland_compat(&mut cmd, java_version, scale_factor);
     cmd.env("JCEF_DISABLE_SANDBOX", "true");
 
