@@ -758,6 +758,9 @@ fn setup_wayland_compat(cmd: &mut std::process::Command, java_version: u32, scal
         cmd.env("_JAVA_AWT_WM_NONREPARENTING", "1");
     }
 
+    // Set the actual scale value for Java2D rendering
+    cmd.arg(format!("-Dsun.java2d.uiScale={}", scale_factor));
+    
     cmd.args([
         "-Dsun.java2d.uiScale.enabled=true",
         "-Dswing.aatext=true",
