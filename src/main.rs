@@ -776,9 +776,6 @@ fn setup_wayland_compat(cmd: &mut std::process::Command, java_version: u32, scal
         cmd.arg("-Dsun.java2d.xrender=true");
     }
 
-    if scale_factor > 1.0 {
-        cmd.arg(format!("-Dflatlaf.uiScale={}", scale_factor));
-    }
 }
 
 fn find_java() -> Result<String> {
