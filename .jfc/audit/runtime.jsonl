@@ -1,0 +1,18 @@
+{"at_ms":1782962145619,"kind":"ProviderCall","subject":"claude-opus-4-8","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962158604,"kind":"ProviderCall","subject":"claude-opus-4-8","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962164555,"kind":"ProviderCall","subject":"claude-opus-4-8","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962170000,"kind":"ProviderCall","subject":"claude-opus-4-8","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962174850,"kind":"ProviderCall","subject":"claude-opus-4-8","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962222599,"kind":"ProviderCall","subject":"claude-sonnet-5","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962227967,"kind":"ProviderCall","subject":"claude-sonnet-5","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962234323,"kind":"ProviderCall","subject":"claude-sonnet-5","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962245368,"kind":"ProviderCall","subject":"claude-sonnet-5","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962250246,"kind":"ProviderCall","subject":"claude-sonnet-5","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962254270,"kind":"ProviderCall","subject":"claude-sonnet-5","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962258482,"kind":"ProviderCall","subject":"claude-sonnet-5","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962298425,"kind":"ProviderCall","subject":"claude-sonnet-4-6","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962305654,"kind":"ProviderCall","subject":"claude-sonnet-4-6","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962312090,"kind":"ProviderCall","subject":"claude-sonnet-4-6","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962331639,"kind":"ToolCall","subject":"MultiEdit","detail":"/home/cole/RustProjects/active/rusburp/src/main.rs","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962334742,"kind":"ProviderCall","subject":"claude-sonnet-4-6","detail":"","change_id":null,"task_id":null,"session_id":null}
+{"at_ms":1782962337494,"kind":"ToolCall","subject":"Bash","detail":"cargo build --release 2>&1 | tail -5","change_id":null,"task_id":null,"session_id":null}

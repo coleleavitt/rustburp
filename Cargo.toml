@@ -52,6 +52,3 @@ reqwest = { version = "0.12", features = ["json", "blocking"] }
 
 # Semver parsing
 semver = "1"
-
-# Regex
-regex = "1"

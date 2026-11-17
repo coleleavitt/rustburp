@@ -626,6 +626,28 @@ fn cmd_auto(scale: Option<f64>) -> Result<()> {
     setup_wayland_compat(&mut cmd, java_version, scale_factor);
     cmd.env("JCEF_DISABLE_SANDBOX", "true");
 
+    // Burp AT custom backend support - set these to redirect Burp AT to a local server
+    if let Ok(gateway_url) = std::env::var("BURPAI_GATEWAY_URL") {
+        cmd.env("BURPAI_GATEWAY_URL", &gateway_url);
+        println!("{} BURPAI_GATEWAY_URL={}", "→".blue(), gateway_url.yellow());
+    }
+    if let Ok(mcp_url) = std::env::var("BURPAI_MCP_URL") {
+        cmd.env("BURPAI_MCP_URL", &mcp_url);
+        println!("{} BURPAI_MCP_URL={}", "→".blue(), mcp_url.yellow());
+    }
+    if let Ok(mcp_bearer) = std::env::var("BURPAI_MCP_BEARER") {
+        cmd.env("BURPAI_MCP_BEARER", &mcp_bearer);
+        println!("{} BURPAI_MCP_BEARER=<set>", "→".blue());
+    }
+
+    // Load Burp AT patch agent if BURP_AT_PATCH is set
+    let patch_agent = std::path::Path::new(&std::env::var("HOME").unwrap_or_default())
+        .join(".local/share/BurpSuite/burp-at-patch.jar");
+    if patch_agent.exists() && std::env::var("BURPAI_GATEWAY_URL").is_ok() {
+        cmd.arg(format!("-javaagent:{}", patch_agent.display()));
+        println!("{} Burp AT patch agent loaded", "→".blue());
+    }
+
     // Always use agent if it exists
     if agent_path.exists() {
         cmd.arg(format!("-javaagent:{}", agent_path.display()));
