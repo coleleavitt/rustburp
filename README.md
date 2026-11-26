@@ -192,6 +192,54 @@ Options:
   -V, --version    Print version
 ```
 
+### Configuring Burp Suite Memory
+
+Burp's **Settings → Suite → Performance → Maximum memory usage** setting is greyed out when you launch Burp through rusburp. That setting only works with PortSwigger's own native launcher, which can restart the JVM with a new heap size. rusburp starts the JVM directly (`java -jar ...`), and Java locks the heap size at process start, so Burp disables the option. Set the heap through the JVM instead:
+
+**Recommended: `JAVA_TOOL_OPTIONS`** (works with `rusburp` and `rusburp run`, keeping the agent, scaling, and Wayland flags):
+
+```bash
+JAVA_TOOL_OPTIONS="-Xmx4g" rusburp run
+```
+
+Windows (PowerShell):
+
+```powershell
+$env:JAVA_TOOL_OPTIONS = "-Xmx4g"; rusburp run
+```
+
+Notes:
+
+- Use `JAVA_TOOL_OPTIONS`, **not** `_JAVA_OPTIONS`. rusburp deliberately clears `_JAVA_OPTIONS` so the shell can't inject UI-scale flags; `JAVA_TOOL_OPTIONS` is passed straight through to the JVM.
+- Java prints `Picked up JAVA_TOOL_OPTIONS: -Xmx4g` when Burp starts — that line confirms the setting took effect.
+- The minimum is `-Xmx256m`. Around 4 GB is comfortable for large scans; don't exceed your physical RAM, and leave room for the OS.
+- If you set nothing, the JVM default applies (typically a quarter of physical RAM). Burp's "50% of memory" default only applies when PortSwigger's launcher starts it.
+- For very large projects, also use a disk-based project (offered in Burp's startup dialog) to keep traffic on disk instead of in RAM.
+
+**Alternative: launch Burp manually** (bypasses rusburp's flags — include them yourself on Java 17+):
+
+Linux:
+```bash
+java -Xmx4g \
+  --add-opens=java.desktop/javax.swing=ALL-UNNAMED \
+  --add-opens=java.base/java.lang=ALL-UNNAMED \
+  --add-opens=java.base/java.lang.reflect=ALL-UNNAMED \
+  --add-opens=java.base/java.util=ALL-UNNAMED \
+  --add-opens=java.base/sun.nio.ch=ALL-UNNAMED \
+  --add-opens=java.base/java.io=ALL-UNNAMED \
+  --enable-native-access=ALL-UNNAMED \
+  -XX:+EnableDynamicAgentLoading \
+  -javaagent:~/.local/share/rusburp/burp-agent.jar \
+  -jar ~/.local/share/BurpSuite/burpsuite_pro.jar
+```
+
+Windows (PowerShell), with the same `--add-opens` flags on Java 17+:
+```powershell
+java -Xmx4g `
+  -javaagent:"$env:LOCALAPPDATA\rusburp\burp-agent.jar" `
+  -jar "$env:LOCALAPPDATA\BurpSuite\burpsuite_pro.jar"
+```
+
 ## File Locations
 
 | Platform | Config File | Data Directory |
@@ -228,6 +276,10 @@ export GDK_SCALE=2
 export QT_SCALE_FACTOR=2
 rusburp run
 ```
+
+### "Maximum Memory Usage" Is Greyed Out
+
+That setting only works when Burp is started by PortSwigger's native launcher; rusburp starts the JVM directly, so the heap is fixed at launch. See [Configuring Burp Suite Memory](#configuring-burp-suite-memory) for how to set `-Xmx` via `JAVA_TOOL_OPTIONS` instead.
 
 ### Wayland Issues (Linux)
 
